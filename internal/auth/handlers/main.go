@@ -35,6 +35,8 @@ func (h *AuthHandlers) Register(c *gin.Context) {
 		return
 	}
 
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
+
 	c.JSON(http.StatusOK, token)
 }
 
@@ -51,6 +53,8 @@ func (h *AuthHandlers) Login(c *gin.Context) {
 		h.errorHandler(c, err)
 		return
 	}
+
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
 
 	c.JSON(http.StatusOK, token)
 }
