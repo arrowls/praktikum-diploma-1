@@ -2,7 +2,7 @@ package entity
 
 const (
 	StatusNew        string = "NEW"
-	StatusProcessing        = "PROCESSING"
-	StatusInvalid           = "INVALID"
-	StatusProcessed         = "PROCESSED"
+	StatusProcessing string = "PROCESSING"
+	StatusInvalid    string = "INVALID"
+	StatusProcessed  string = "PROCESSED"
 )

@@ -28,14 +28,11 @@ type AccrualService struct {
 }
 
 func (s *AccrualService) Run() {
-	for {
-		select {
-		case <-s.ticker.C:
-			s.resetTicker()
-			ctx := context.Background()
-			orderList := s.extractUnprocessedOrders(ctx)
-			s.processOrders(orderList)
-		}
+	for range s.ticker.C {
+		s.resetTicker()
+		ctx := context.Background()
+		orderList := s.extractUnprocessedOrders(ctx)
+		s.processOrders(orderList)
 	}
 }
 
