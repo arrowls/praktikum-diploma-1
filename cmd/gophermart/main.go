@@ -22,6 +22,11 @@ func main() {
 	db := database.ProvideDatabase(container)
 	defer db.Close(context.Background())
 
+	err := database.AutoMigrate(serverConfig.DatabaseURI)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	authHandlers := handlers.ProvideAuthHandlers(container)
 	orderHandler := orderHandlers.ProvideOrderHandlers(container)
 	balanceHandler := balanceHandlers.ProvideBalanceHandlers(container)
