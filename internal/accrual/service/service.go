@@ -15,7 +15,7 @@ import (
 
 type Repo interface {
 	GetUnprocessedOrders(ctx context.Context) ([]entity.Order, error)
-	UpdateBalanceAndOrderStatus(ctx context.Context, userID uuid.UUID, amount int, orderNumber, status string) error
+	UpdateBalanceAndOrderStatus(ctx context.Context, userID uuid.UUID, amount float32, orderNumber, status string) error
 	UpdateOrderStatus(ctx context.Context, orderNumber, status string) error
 }
 

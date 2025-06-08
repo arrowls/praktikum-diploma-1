@@ -16,7 +16,12 @@ type AccrualRepository struct {
 	logger *logrus.Logger
 }
 
-func (r *AccrualRepository) UpdateBalanceAndOrderStatus(ctx context.Context, userID uuid.UUID, amount int, orderNumber, status string) error {
+func (r *AccrualRepository) UpdateBalanceAndOrderStatus(ctx context.Context, userID uuid.UUID, amount float32, orderNumber, status string) error {
+	err := r.initUserBalance(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("error initializing user (%s) balance: %w", userID.String(), err)
+	}
+
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("error begin tx: %w", err)
@@ -37,8 +42,8 @@ func (r *AccrualRepository) UpdateBalanceAndOrderStatus(ctx context.Context, use
 	}
 
 	_, err = tx.Exec(ctx, `
-		update orders set status = $1 where number = $2
-	`, status, orderNumber)
+		update orders set status = $1, accrual = $3 where number = $2
+	`, status, orderNumber, amount)
 	if err != nil {
 		return fmt.Errorf("error updating order (%s) status: %w", orderNumber, err)
 	}
@@ -78,4 +83,15 @@ func (r *AccrualRepository) GetUnprocessedOrders(ctx context.Context) ([]entity.
 	}
 
 	return list, nil
+}
+
+func (r *AccrualRepository) initUserBalance(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.db.Exec(ctx, `
+			insert into user_balance (user_id, current, withdrawn) values ($1, 0, 0) on conflict do nothing
+		`, userID)
+	if err != nil {
+		return fmt.Errorf("error creating emty balance for user %s %w", userID.String(), err)
+	}
+
+	return nil
 }

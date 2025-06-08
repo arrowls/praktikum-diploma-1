@@ -93,7 +93,7 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, userID uuid.UUID, req 
 		return balanceerrors.ErrWithdrawalExists
 	}
 
-	var currentBalance int
+	var currentBalance float32
 	err = tx.QueryRow(ctx, `
 		select current from user_balance where user_id = $1 for update 
 	`, userID).Scan(&currentBalance)

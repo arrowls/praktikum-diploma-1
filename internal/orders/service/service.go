@@ -20,31 +20,30 @@ type OrderService struct {
 	repo OrderRepo
 }
 
-func (s *OrderService) AddOrder(ctx context.Context, orderNumber string, userID uuid.UUID) (*entity.Order, error) {
+func (s *OrderService) AddOrder(ctx context.Context, orderNumber string, userID uuid.UUID) (*entity.Order, bool, error) {
 	isValidLuhn := s.validateLuhn(orderNumber)
 	if !isValidLuhn {
-		return nil, ordererrors.ErrLuhnInvalid
+		return nil, false, ordererrors.ErrLuhnInvalid
 	}
 
 	existingOrder, err := s.repo.GetOrderByNumber(ctx, orderNumber)
 	if errors.Is(err, apperrors.ErrNotFound) {
 		order, err := s.repo.AddOrder(ctx, orderNumber, userID)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
-		return order, nil
+		return order, false, nil
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	if existingOrder.UserID.String() != userID.String() {
-		return nil, ordererrors.ErrOrderAddedByOtherUser
+		return nil, false, ordererrors.ErrOrderAddedByOtherUser
 	}
-
-	return existingOrder, nil
+	return existingOrder, true, nil
 
 }
 

@@ -47,7 +47,7 @@ func main() {
 
 	privateRouter.GET("/balance", balanceHandler.GetBalance)
 	privateRouter.GET("/withdrawals", balanceHandler.GetWithdrawals)
-	privateRouter.GET("/balance/withdraw", balanceHandler.Withdraw)
+	privateRouter.POST("/balance/withdraw", balanceHandler.Withdraw)
 
 	accrual := service.ProvideAccrualService(container)
 

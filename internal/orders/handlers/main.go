@@ -11,7 +11,7 @@ import (
 )
 
 type Service interface {
-	AddOrder(ctx context.Context, orderNumber string, userID uuid.UUID) (*entity.Order, error)
+	AddOrder(ctx context.Context, orderNumber string, userID uuid.UUID) (*entity.Order, bool, error)
 	GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]entity.Order, error)
 }
 
@@ -33,13 +33,13 @@ func (h *OrderHandlers) AddOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.service.AddOrder(c.Request.Context(), orderNumber, userID)
+	_, exists, err := h.service.AddOrder(c.Request.Context(), orderNumber, userID)
 	if err != nil {
 		h.errorHandler(c, err)
 		return
 	}
 
-	if order.Status == entity.StatusProcessing {
+	if !exists {
 		c.Status(http.StatusAccepted)
 		return
 	}
