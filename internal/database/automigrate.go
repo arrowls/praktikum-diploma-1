@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"fmt"
+	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -9,8 +11,12 @@ import (
 )
 
 func AutoMigrate(databaseURI string) error {
+	migrationsPath, err := filepath.Abs("./migrations")
+	if err != nil {
+		return fmt.Errorf("migration dir not found")
+	}
 	m, err := migrate.New(
-		"file:///migrations",
+		fmt.Sprintf("file://%s", migrationsPath),
 		databaseURI,
 	)
 	if err != nil {
