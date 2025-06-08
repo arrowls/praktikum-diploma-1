@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/arrowls/praktikum-diploma-1/internal/accrual/service"
 	"github.com/arrowls/praktikum-diploma-1/internal/auth/handlers"
@@ -10,6 +9,7 @@ import (
 	"github.com/arrowls/praktikum-diploma-1/internal/config"
 	"github.com/arrowls/praktikum-diploma-1/internal/database"
 	"github.com/arrowls/praktikum-diploma-1/internal/di"
+	"github.com/arrowls/praktikum-diploma-1/internal/logger"
 	"github.com/arrowls/praktikum-diploma-1/internal/middleware"
 	orderHandlers "github.com/arrowls/praktikum-diploma-1/internal/orders/handlers"
 	"github.com/gin-gonic/gin"
@@ -18,6 +18,7 @@ import (
 func main() {
 	container := di.NewContainer()
 	serverConfig := config.ProvideConfig(container)
+	log := logger.ProvideLogger(container)
 
 	db := database.ProvideDatabase(container)
 	defer db.Close(context.Background())
@@ -26,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("migrations complete")
 
 	authHandlers := handlers.ProvideAuthHandlers(container)
 	orderHandler := orderHandlers.ProvideOrderHandlers(container)

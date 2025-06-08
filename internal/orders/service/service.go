@@ -28,8 +28,12 @@ func (s *OrderService) AddOrder(ctx context.Context, orderNumber string, userID 
 
 	existingOrder, err := s.repo.GetOrderByNumber(ctx, orderNumber)
 	if errors.Is(err, apperrors.ErrNotFound) {
-		_, err := s.repo.AddOrder(ctx, orderNumber, userID)
-		return nil, err
+		order, err := s.repo.AddOrder(ctx, orderNumber, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		return order, nil
 	}
 
 	if err != nil {
