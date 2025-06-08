@@ -26,6 +26,8 @@ services:
       RUN_ADDRESS: ":${APP_PORT}"
     command: air -c .air.toml
   accrual:
+    ports:
+      - "8081:8080"
     build:
       dockerfile: accrual.Dockerfile
 
