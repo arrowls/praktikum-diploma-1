@@ -32,7 +32,7 @@ func (r *OrdersRepository) AddOrder(ctx context.Context, number string, userID u
 
 func (r *OrdersRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]entity.Order, error) {
 	rows, err := r.db.Query(ctx, `
-		select number, status, accrual, uploaded_at, user_id from orders where user_id = $1
+		select number, status, accrual, uploaded_at, user_id from orders where user_id = $1 order by uploaded_at desc 
 	`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("could not get rows for user %s: %v", userID.String(), err)
