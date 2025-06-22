@@ -2,27 +2,59 @@ package main
 
 import (
 	"context"
-	"log"
 
+	"github.com/arrowls/praktikum-diploma-1/internal/accrual/service"
 	"github.com/arrowls/praktikum-diploma-1/internal/auth/handlers"
+	balanceHandlers "github.com/arrowls/praktikum-diploma-1/internal/balance/handlers"
 	"github.com/arrowls/praktikum-diploma-1/internal/config"
 	"github.com/arrowls/praktikum-diploma-1/internal/database"
 	"github.com/arrowls/praktikum-diploma-1/internal/di"
+	"github.com/arrowls/praktikum-diploma-1/internal/logger"
+	"github.com/arrowls/praktikum-diploma-1/internal/middleware"
+	orderHandlers "github.com/arrowls/praktikum-diploma-1/internal/orders/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	container := di.NewContainer()
 	serverConfig := config.ProvideConfig(container)
+	log := logger.ProvideLogger(container)
 
 	db := database.ProvideDatabase(container)
 	defer db.Close(context.Background())
+
+	err := database.AutoMigrate(serverConfig.DatabaseURI)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Info("migrations complete")
+
 	authHandlers := handlers.ProvideAuthHandlers(container)
+	orderHandler := orderHandlers.ProvideOrderHandlers(container)
+	balanceHandler := balanceHandlers.ProvideBalanceHandlers(container)
 
 	router := gin.Default()
 
-	router.POST("/api/user/register", authHandlers.Register)
-	router.POST("/api/user/login", authHandlers.Login)
+	publicRouter := router.Group("/api/user")
+	privateRouter := router.Group("/api/user")
+	privateRouter.Use(middleware.AuthMiddleware())
 
-	log.Fatal(router.Run(serverConfig.RunAddress))
+	publicRouter.POST("/register", authHandlers.Register)
+	publicRouter.POST("/login", authHandlers.Login)
+
+	privateRouter.POST("/orders", orderHandler.AddOrder)
+	privateRouter.GET("/orders", orderHandler.GetList)
+
+	privateRouter.GET("/balance", balanceHandler.GetBalance)
+	privateRouter.GET("/withdrawals", balanceHandler.GetWithdrawals)
+	privateRouter.POST("/balance/withdraw", balanceHandler.Withdraw)
+
+	accrual := service.ProvideAccrualService(container)
+
+	go accrual.Run()
+	if err := router.Run(serverConfig.RunAddress); err != nil {
+		log.Error(err)
+		return
+	}
 }
