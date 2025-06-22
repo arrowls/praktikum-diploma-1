@@ -32,7 +32,7 @@ func (r *BalanceRepository) initUserBalance(ctx context.Context, userID uuid.UUI
 func (r *BalanceRepository) GetBalanceByUserID(ctx context.Context, userID uuid.UUID) (*entity.Balance, error) {
 	var balance entity.Balance
 	err := r.db.QueryRow(ctx, `
-		select current, withdrawn from user_balance where user_id = $1
+		select current::decimal, withdrawn::decimal from user_balance where user_id = $1
 	`, userID).Scan(&balance.Current, &balance.Withdrawn)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -52,7 +52,7 @@ func (r *BalanceRepository) GetBalanceByUserID(ctx context.Context, userID uuid.
 
 func (r *BalanceRepository) GetWithdrawalsByUserID(ctx context.Context, userID uuid.UUID) ([]entity.Withdrawal, error) {
 	rows, err := r.db.Query(ctx, `
-		select order_number, sum, processed_at from withdrawals where user_id = $1;
+		select order_number, sum::decimal, processed_at from withdrawals where user_id = $1;
 	`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving withdrawals for user %s: %w", userID.String(), err)
@@ -95,7 +95,7 @@ func (r *BalanceRepository) Withdraw(ctx context.Context, userID uuid.UUID, req 
 
 	var currentBalance float32
 	err = tx.QueryRow(ctx, `
-		select current from user_balance where user_id = $1 for update 
+		select current::decimal from user_balance where user_id = $1 for update 
 	`, userID).Scan(&currentBalance)
 
 	if errors.Is(err, pgx.ErrNoRows) {
