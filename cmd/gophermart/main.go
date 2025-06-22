@@ -25,7 +25,8 @@ func main() {
 
 	err := database.AutoMigrate(serverConfig.DatabaseURI)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 	log.Info("migrations complete")
 
@@ -52,5 +53,8 @@ func main() {
 	accrual := service.ProvideAccrualService(container)
 
 	go accrual.Run()
-	log.Fatal(router.Run(serverConfig.RunAddress))
+	if err := router.Run(serverConfig.RunAddress); err != nil {
+		log.Error(err)
+		return
+	}
 }
